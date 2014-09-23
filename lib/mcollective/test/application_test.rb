@@ -16,9 +16,9 @@ module MCollective
         @logger = create_logger_mock
         @plugin = load_application(@application, options[:application_file])
 
-        @plugin.stubs(:printrpcstats)
-        @plugin.stubs(:puts)
-        @plugin.stubs(:printf)
+        allow(@plugin).to receive(:printrpcstats)
+        allow(@plugin).to receive(:puts)
+        allow(@plugin).to receive(:printf)
 
         make_create_client
       end
@@ -26,13 +26,13 @@ module MCollective
       def make_create_client
         @plugin.instance_eval "
           def create_client(client)
-              mock_client = Mocha::Mock.new
-              mock_client.stubs(:progress=)
-              mock_client.stubs(:progress)
+              mock_client = double('client')
+              allow(mock_client).to receive(:progress=)
+              allow(mock_client).to receive(:progress)
 
               yield(mock_client) if block_given?
 
-              MCollective::Application::Facts.any_instance.expects(:rpcclient).with(client).returns(mock_client)
+              expect_any_instance_of(MCollective::Application::Facts).to receive(:rpcclient).with(client).and_return(mock_client)
 
               mock_client
           end

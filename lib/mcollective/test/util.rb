@@ -2,11 +2,11 @@ module MCollective
   module Test
     module Util
       def create_facts_mock(factsource)
-        facts = Mocha::Mock.new('facts')
-        facts.stubs(:get_facts).returns(factsource)
+        facts = double('facts')
+        allow(facts).to receive(:get_facts).and_return(factsource)
 
         factsource.each_pair do |k, v|
-          facts.stubs(:get_fact).with(k).returns(v)
+          allow(facts).to receive(:get_fact).with(k).and_return(v)
         end
 
         PluginManager << {:type => "facts_plugin", :class => facts, :single_instance => false}
@@ -15,20 +15,20 @@ module MCollective
       def create_config_mock(config)
         pluginconf = {}
 
-        cfg = Mocha::Mock.new('config')
-        cfg.stubs(:configured).returns(true)
-        cfg.stubs(:rpcauthorization).returns(false)
-        cfg.stubs(:main_collective).returns("mcollective")
-        cfg.stubs(:collectives).returns(["production", "staging"])
-        cfg.stubs(:classesfile).returns("classes.txt")
-        cfg.stubs(:identity).returns("rspec_tests")
-        cfg.stubs(:logger_type).returns("console")
-        cfg.stubs(:loglevel).returns("error")
-        cfg.stubs(:pluginconf).returns(pluginconf)
+        cfg = double('config')
+        allow(cfg).to receive(:configured).and_return(true)
+        allow(cfg).to receive(:rpcauthorization).and_return(false)
+        allow(cfg).to receive(:main_collective).and_return("mcollective")
+        allow(cfg).to receive(:collectives).and_return(["production", "staging"])
+        allow(cfg).to receive(:classesfile).and_return("classes.txt")
+        allow(cfg).to receive(:identity).and_return("rspec_tests")
+        allow(cfg).to receive(:logger_type).and_return("console")
+        allow(cfg).to receive(:loglevel).and_return("error")
+        allow(cfg).to receive(:pluginconf).and_return(pluginconf)
 
         if config
           config.each_pair do |k, v|
-            cfg.send(:stubs, k).returns(v)
+            allow(cfg).to receive(k).and_return(v)
             if k =~ /^plugin.(.+)/
               pluginconf[$1] = v
             end
@@ -39,29 +39,29 @@ module MCollective
               $: << dir if File.exist?(dir)
             end
 
-            cfg.stubs(:libdir).returns(config[:libdir])
+            allow(cfg).to receive(:libdir).and_return(config[:libdir])
           end
         end
 
 
-        Config.stubs(:instance).returns(cfg)
+        allow(Config).to receive(:instance).and_return(cfg)
 
         cfg
       end
 
       def mock_validators
-        Validator.stubs(:load_validators)
-        Validator.stubs(:validate).returns(true)
+        allow(Validator).to receive(:load_validators)
+        allow(Validator).to receive(:validate).and_return(true)
       end
 
       def create_logger_mock
-        logger = Mocha::Mock.new(:logger)
+        logger = double('logger')
 
         [:log, :start, :debug, :info, :warn].each do |meth|
-          logger.stubs(meth)
+          allow(logger).to receive(meth)
         end
 
-        Log.stubs(:config_and_check_level).returns(false)
+        allow(Log).to receive(:config_and_check_level).and_return(false)
 
         Log.configure(logger)
 
@@ -69,10 +69,10 @@ module MCollective
       end
 
       def create_connector_mock
-        connector = Mocha::Mock.new(:connector)
+        connector = double('connector')
 
         [:connect, :receive, :publish, :subscribe, :unsubscribe, :disconnect].each do |meth|
-          connector.stubs(meth)
+          allow(connector).to receive(meth)
         end
 
         PluginManager << {:type => "connector_plugin", :class => connector}
@@ -109,8 +109,8 @@ module MCollective
 
         klass = Agent.const_get(agent.capitalize)
 
-        klass.any_instance.stubs("load_ddl").returns(true)
-        RPC::Request.any_instance.stubs(:validate!).returns(true)
+        allow(klass).to receive("load_ddl").and_return(true)
+        allow(RPC::Request).to receive(:validate!).and_return(true)
 
         PluginManager << {:type => "#{agent}_agent", :class => classname, :single_instance => false}
         PluginManager["#{agent}_agent"]

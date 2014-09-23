@@ -14,7 +14,7 @@ module MCollective
         @logger = create_logger_mock
 
         @plugin = load_data(data, options[:data_file])
-        @plugin.stubs(:ddl_validate).returns(true)
+        allow(@plugin).to receive(:ddl_validate).and_return(true)
       end
 
       def load_data(data, data_file=nil)
@@ -30,9 +30,9 @@ module MCollective
         end
 
         ddl = DDL::Base.new(data, :data, false)
-        ddl.stubs(:dataquery_interface).returns(:output => {})
+        allow(ddl).to receive(:dataquery_interface).and_return(:output => {})
 
-        DDL.stubs(:new).with(data, :data).returns(ddl)
+        allow(DDL).to receive(:new).with(data, :data).and_return(ddl)
 
         unless PluginManager.pluginlist.include?(data.downcase)
           PluginManager << {:type => data, :class => "MCollective::Data::%s" % data.capitalize, :single_instance => false}
