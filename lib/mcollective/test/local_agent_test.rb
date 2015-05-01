@@ -1,6 +1,14 @@
 module MCollective
   module Test
     class LocalAgentTest
+      class << self
+      end
+      include RSpec::Mocks
+      # include RSpec::Mocks::Methods
+      include RSpec::Mocks::AnyInstance
+      include RSpec::Mocks::ExampleMethods
+      # RSpec::Mocks.setup(self)
+
       attr_reader :config, :logger, :agent, :connector, :plugin, :facts
 
       include Test::Util

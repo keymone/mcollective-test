@@ -18,6 +18,7 @@ module MCollective
         cfg = double('config')
         allow(cfg).to receive(:configured).and_return(true)
         allow(cfg).to receive(:rpcauthorization).and_return(false)
+        allow(cfg).to receive(:rpcaudit).and_return(false)
         allow(cfg).to receive(:main_collective).and_return("mcollective")
         allow(cfg).to receive(:collectives).and_return(["production", "staging"])
         allow(cfg).to receive(:classesfile).and_return("classes.txt")
@@ -61,7 +62,7 @@ module MCollective
           allow(logger).to receive(meth)
         end
 
-        allow(Log).to receive(:config_and_check_level).and_return(false)
+        expect(Log).to receive(:config_and_check_level).at_most(:once).and_return(false)
 
         Log.configure(logger)
 
@@ -110,7 +111,9 @@ module MCollective
         klass = Agent.const_get(agent.capitalize)
 
         allow(klass).to receive("load_ddl").and_return(true)
-        allow(RPC::Request).to receive(:validate!).and_return(true)
+        # [2015-04-25 Christo] For some STUPID reason neither Mocha::Mock NOR RSpec::Mocks can trap the validate! ... :( So we will just Stub the entire damn class!!!
+        # RPC::Request.stub(:validate!).and_return(true)
+        stub_const("MCollective::RPC::Request", MCollective::RPC::StubRequest)
 
         PluginManager << {:type => "#{agent}_agent", :class => classname, :single_instance => false}
         PluginManager["#{agent}_agent"]
@@ -122,6 +125,24 @@ module MCollective
         else
           {:senderid => senderid, :body =>{:data => data}}
         end
+      end
+    end
+  end
+end
+
+module MCollective
+  module RPC
+    class StubRequest < Request
+      # include RSpec::Mocks
+      # include RSpec::Mocks::Methods
+      # include RSpec::Mocks::AnyInstance
+      # include RSpec::Mocks::ExampleMethods
+      # def initialize(msg, ddl)
+      #   super(msg, ddl)
+      #   # self.stub(:validate! => true)
+      # end
+      def validate!
+        true
       end
     end
   end
