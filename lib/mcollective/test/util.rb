@@ -110,7 +110,7 @@ module MCollective
 
         klass = Agent.const_get(agent.capitalize)
 
-        allow(klass).to receive("load_ddl").and_return(true)
+        allow_any_instance_of(klass).to receive("load_ddl").and_return(true)
         # [2015-04-25 Christo] For some STUPID reason neither Mocha::Mock NOR RSpec::Mocks can trap the validate! ... :( So we will just Stub the entire damn class!!!
         # RPC::Request.stub(:validate!).and_return(true)
         stub_const("MCollective::RPC::Request", MCollective::RPC::StubRequest)
